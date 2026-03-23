@@ -1,11 +1,32 @@
-const express = require('express')
-const app = express()
-const port = 3000
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const PORT = 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.use(cors());
+app.use(express.json());
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+const API_URL = 'https://api.darkglass.com/shopify/products';
+
+app.get('/', async (req, res) => {
+  try {
+    console.log(`Fetching data from: ${API_URL}`);
+
+    const response = await fetch(API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const liveData = await response.json();
+    res.json(liveData);
+
+  } catch (error) {
+    alert('Error fetching API', error);
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
