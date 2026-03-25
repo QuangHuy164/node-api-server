@@ -11,7 +11,8 @@ const API_URL = process.env.DARKGLASS_API_URL;
 
 app.get('/', async (req, res) => {
   try {
-    console.log(`Fetching data from: ${API_URL}`);
+    const searchQuery = req.query.search ? req.query.search.toLowerCase() : ''
+    console.log(`Fetching data from: ${searchQuery}`);
 
     const response = await fetch(API_URL, {
       method: 'GET',
@@ -21,12 +22,24 @@ app.get('/', async (req, res) => {
     });
 
     const liveData = await response.json();
-    res.json(liveData);
+
+    if (searchQuery && liveData.data && liveData.data.edges) {
+      liveData.data.edges = liveData.data.edges.filter(({ node }) => {
+        const filteredTitle = node.title.toLowerCase().includes(searchQuery);
+
+        const sku = node.variants?.edges?.[0].node.sku || ''
+        const filteredSku = sku.toLowerCase().includes(searchQuery);
+
+        return filteredTitle || filteredSku;
+      })
+    }
+
+res.json(liveData);
 
   } catch (error) {
-     console.error('Error fetching API:', error);
-    res.status(500).json({ error: 'Failed to fetch API' });
-  }
+  console.error('Error fetching API:', error);
+  res.status(500).json({ error: 'Failed to fetch API' });
+}
 });
 
 app.listen(PORT, () => {
